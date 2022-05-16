@@ -587,9 +587,9 @@ class ShadowHandPushBlockGame(BaseTask):
 
         self.block_right_handle_pos = self.rigid_body_states[:, 26 * 2, 0:3]
         self.block_right_handle_rot = self.rigid_body_states[:, 26 * 2, 3:7]
-        # self.block_right_handle_pos = self.block_right_handle_pos + quat_apply(self.block_right_handle_rot, to_torch([0, 1, 0], device=self.device).repeat(self.num_envs, 1) * 0.)
-        # self.block_right_handle_pos = self.block_right_handle_pos + quat_apply(self.block_right_handle_rot, to_torch([1, 0, 0], device=self.device).repeat(self.num_envs, 1) * 0.0)
-        # self.block_right_handle_pos = self.block_right_handle_pos + quat_apply(self.block_right_handle_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.0)
+        self.block_right_handle_pos = self.block_right_handle_pos + quat_apply(self.block_right_handle_rot, to_torch([0, 1, 0], device=self.device).repeat(self.num_envs, 1) * 0.)
+        self.block_right_handle_pos = self.block_right_handle_pos + quat_apply(self.block_right_handle_rot, to_torch([1, 0, 0], device=self.device).repeat(self.num_envs, 1) * 0.0)
+        self.block_right_handle_pos = self.block_right_handle_pos + quat_apply(self.block_right_handle_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.0)
 
         self.block_left_handle_pos = self.rigid_body_states[:, 26 * 2 + 1, 0:3]
         self.block_left_handle_rot = self.rigid_body_states[:, 26 * 2 + 1, 3:7]
