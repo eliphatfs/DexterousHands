@@ -398,8 +398,8 @@ class ShadowHandPushBlockGame(BaseTask):
         table_pose.r = gymapi.Quat().from_euler_zyx(-0., 0, 0)
 
         # compute aggregate size
-        max_agg_bodies = self.num_shadow_hand_bodies * 2 + 3 * self.num_object_bodies + 1
-        max_agg_shapes = self.num_shadow_hand_shapes * 2 + 3 * self.num_object_shapes + 1
+        max_agg_bodies = self.num_shadow_hand_bodies * 2 + 5 * self.num_object_bodies + 1
+        max_agg_shapes = self.num_shadow_hand_shapes * 2 + 5 * self.num_object_shapes + 1
 
         self.shadow_hands = []
         self.envs = []
