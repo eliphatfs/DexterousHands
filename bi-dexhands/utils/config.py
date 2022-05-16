@@ -129,6 +129,8 @@ def retrieve_cfg(args, use_rlg_config=False):
         return os.path.join(args.logdir, "shadow_hand_meta_mt5_door/{}/{}".format(args.algo, args.algo)), "cfg/{}/config.yaml".format(args.algo), "cfg/meta_env_cfg/shadow_hand_meta_mt5_door.yaml"
     elif args.task == "ShadowHandPushBlock":
         return os.path.join(args.logdir, "shadow_hand_push_block/{}/{}".format(args.algo, args.algo)), "cfg/{}/config.yaml".format(args.algo), "cfg/shadow_hand_push_block.yaml"
+    elif args.task == "ShadowHandPushBlockGame":
+        return os.path.join(args.logdir, "shadow_hand_push_block_game/{}/{}".format(args.algo, args.algo)), "cfg/{}/config.yaml".format(args.algo), "cfg/shadow_hand_push_block_game.yaml"
     elif args.task == "ShadowHandSwingCup":
         return os.path.join(args.logdir, "shadow_hand_swing_cup/{}/{}".format(args.algo, args.algo)), "cfg/{}/config.yaml".format(args.algo), "cfg/shadow_hand_swing_cup.yaml"
     elif args.task == "ShadowHandGraspAndPlace":

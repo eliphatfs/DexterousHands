@@ -18,7 +18,7 @@ from isaacgym import gymtorch
 from isaacgym import gymapi
 
 
-class ShadowHandPushBlock(BaseTask):
+class ShadowHandPushBlockGame(BaseTask):
     def __init__(self, cfg, sim_params, physics_engine, device_type, device_id, headless, agent_index=[[[0, 1, 2, 3, 4, 5]], [[0, 1, 2, 3, 4, 5]]], is_multi_agent=False):
         self.cfg = cfg
         self.sim_params = sim_params
@@ -101,7 +101,7 @@ class ShadowHandPushBlock(BaseTask):
             "openai": 42,
             "full_no_vel": 77,
             "full": 157,
-            "full_state": 422 - 11 + 6
+            "full_state": 422 - 11 + 6 + 6
         }
         self.num_hand_obs = 72 + 95 + 26 + 6
         self.up_axis = 'z'
@@ -363,13 +363,21 @@ class ShadowHandPushBlock(BaseTask):
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 0, 1.57)
 
         object_start_pose = gymapi.Transform()
-        object_start_pose.p = gymapi.Vec3(0.0, 0.2, 0.6)
+        object_start_pose.p = gymapi.Vec3(0.0, 0.15, 0.6)
         object_start_pose.r = gymapi.Quat().from_euler_zyx(1.57, 1.57, 0)
         pose_dx, pose_dy, pose_dz = -1.0, 0.0, -0.0
 
         block_start_pose = gymapi.Transform()
-        block_start_pose.p = gymapi.Vec3(0.0, -0.2, 0.6)
+        block_start_pose.p = gymapi.Vec3(0.0, -0.15, 0.6)
         block_start_pose.r = gymapi.Quat().from_euler_zyx(1.57, 1.57, 0)
+
+        block_start_pose2 = gymapi.Transform()
+        block_start_pose2.p = gymapi.Vec3(0.0, 0.25, 0.6)
+        block_start_pose2.r = gymapi.Quat().from_euler_zyx(1.57, 1.57, 0)
+
+        block_start_poseA2 = gymapi.Transform()
+        block_start_poseA2.p = gymapi.Vec3(0.0, -0.25, 0.6)
+        block_start_poseA2.r = gymapi.Quat().from_euler_zyx(1.57, 1.57, 0)
         # object_start_pose.p.x = shadow_hand_start_pose.p.x + pose_dx
         # object_start_pose.p.y = shadow_hand_start_pose.p.y + pose_dy
         # object_start_pose.p.z = shadow_hand_start_pose.p.z + pose_dz
@@ -485,6 +493,14 @@ class ShadowHandPushBlock(BaseTask):
             block_idx = self.gym.get_actor_index(env_ptr, block_handle, gymapi.DOMAIN_SIM)
             self.block_indices.append(block_idx)
 
+            block_handle = self.gym.create_actor(env_ptr, block_asset, block_start_pose2, "block2", i, 0, 0)
+            block_idx = self.gym.get_actor_index(env_ptr, block_handle, gymapi.DOMAIN_SIM)
+            self.block_indices.append(block_idx)
+
+            block_handle = self.gym.create_actor(env_ptr, block_asset, block_start_poseA2, "blockA2", i, 0, 0)
+            block_idx = self.gym.get_actor_index(env_ptr, block_handle, gymapi.DOMAIN_SIM)
+            self.block_indices.append(block_idx)
+
             # add goal object
             goal_handle = self.gym.create_actor(env_ptr, goal_asset, goal_start_pose, "goal_object", i + self.num_envs, 0, 0)
             goal_object_idx = self.gym.get_actor_index(env_ptr, goal_handle, gymapi.DOMAIN_SIM)
@@ -532,7 +548,7 @@ class ShadowHandPushBlock(BaseTask):
     def compute_reward(self, actions):
         self.rew_buf[:], self.reset_buf[:], self.reset_goal_buf[:], self.progress_buf[:], self.successes[:], self.consecutive_successes[:] = compute_hand_reward(
             self.rew_buf, self.reset_buf, self.reset_goal_buf, self.progress_buf, self.successes, self.consecutive_successes,
-            self.max_episode_length, self.object_pos, self.object_rot, self.goal_pos, self.goal_rot, self.block_right_handle_pos, self.block_left_handle_pos, 
+            self.max_episode_length, self.object_pos, self.object_rot, self.goal_pos, self.goal_rot, self.block_right_handle_pos, self.block_left_handle_pos, self.block_right_handle_2_pos, self.block_left_handle_2_pos, 
             self.left_hand_pos, self.right_hand_pos, self.right_hand_ff_pos, self.right_hand_mf_pos, self.right_hand_rf_pos, self.right_hand_lf_pos, self.right_hand_th_pos, 
             self.left_hand_ff_pos, self.left_hand_mf_pos, self.left_hand_rf_pos, self.left_hand_lf_pos, self.left_hand_th_pos, 
             self.dist_reward_scale, self.rot_reward_scale, self.rot_eps, self.actions, self.action_penalty_scale,
@@ -571,16 +587,18 @@ class ShadowHandPushBlock(BaseTask):
 
         self.block_right_handle_pos = self.rigid_body_states[:, 26 * 2, 0:3]
         self.block_right_handle_rot = self.rigid_body_states[:, 26 * 2, 3:7]
-        self.block_right_handle_pos = self.block_right_handle_pos + quat_apply(self.block_right_handle_rot, to_torch([0, 1, 0], device=self.device).repeat(self.num_envs, 1) * 0.)
-        self.block_right_handle_pos = self.block_right_handle_pos + quat_apply(self.block_right_handle_rot, to_torch([1, 0, 0], device=self.device).repeat(self.num_envs, 1) * 0.0)
-        self.block_right_handle_pos = self.block_right_handle_pos + quat_apply(self.block_right_handle_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.0)
+        # self.block_right_handle_pos = self.block_right_handle_pos + quat_apply(self.block_right_handle_rot, to_torch([0, 1, 0], device=self.device).repeat(self.num_envs, 1) * 0.)
+        # self.block_right_handle_pos = self.block_right_handle_pos + quat_apply(self.block_right_handle_rot, to_torch([1, 0, 0], device=self.device).repeat(self.num_envs, 1) * 0.0)
+        # self.block_right_handle_pos = self.block_right_handle_pos + quat_apply(self.block_right_handle_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.0)
 
         self.block_left_handle_pos = self.rigid_body_states[:, 26 * 2 + 1, 0:3]
         self.block_left_handle_rot = self.rigid_body_states[:, 26 * 2 + 1, 3:7]
-        self.block_left_handle_pos = self.block_left_handle_pos + quat_apply(self.block_left_handle_rot, to_torch([0, 1, 0], device=self.device).repeat(self.num_envs, 1) * 0.0)
-        self.block_left_handle_pos = self.block_left_handle_pos + quat_apply(self.block_left_handle_rot, to_torch([1, 0, 0], device=self.device).repeat(self.num_envs, 1) * 0.0)
-        self.block_left_handle_pos = self.block_left_handle_pos + quat_apply(self.block_left_handle_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.0)
 
+        self.block_right_handle_2_pos = self.rigid_body_states[:, 26 * 2 + 2, 0:3]
+        self.block_right_handle_2_rot = self.rigid_body_states[:, 26 * 2 + 2, 3:7]
+        self.block_left_handle_2_pos = self.rigid_body_states[:, 26 * 2 + 3, 0:3]
+        self.block_left_handle_2_rot = self.rigid_body_states[:, 26 * 2 + 3, 3:7]
+        
         self.left_hand_pos = self.rigid_body_states[:, 3 + 26, 0:3]
         self.left_hand_rot = self.rigid_body_states[:, 3 + 26, 3:7]
         self.left_hand_pos = self.left_hand_pos + quat_apply(self.left_hand_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.08)
@@ -687,6 +705,8 @@ class ShadowHandPushBlock(BaseTask):
         self.obs_buf[:, obj_obs_start + 10:obj_obs_start + 13] = self.vel_obs_scale * self.object_angvel
         self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.block_right_handle_pos
         self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.block_left_handle_pos
+        self.obs_buf[:, obj_obs_start + 19:obj_obs_start + 22] = self.block_right_handle_2_pos
+        self.obs_buf[:, obj_obs_start + 22:obj_obs_start + 25] = self.block_left_handle_2_pos
         # goal_obs_start = obj_obs_start + 13  # 157 = 144 + 13
         # self.obs_buf[:, goal_obs_start:goal_obs_start + 7] = self.goal_pose
         # self.obs_buf[:, goal_obs_start + 7:goal_obs_start + 11] = quat_mul(self.object_rot, quat_conjugate(self.goal_rot))
@@ -945,8 +965,6 @@ def compute_hand_reward(
     reward = right_hand_dist_rew + left_hand_dist_rew + up_rew
 
     resets = torch.where(right_hand_dist_rew <= 0, torch.ones_like(reset_buf), reset_buf)
-    # resets = torch.where(right_hand_dist >= 0.5, torch.ones_like(resets), resets)
-    # resets = torch.where(left_hand_dist >= 0.2, torch.ones_like(resets), resets)
 
     # Find out which envs hit the goal and update successes count
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)

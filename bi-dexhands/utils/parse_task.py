@@ -17,6 +17,7 @@ from tasks.shadow_hand_door_open_inward import ShadowHandDoorOpenInward
 from tasks.shadow_hand_door_open_outward import ShadowHandDoorOpenOutward
 from tasks.shadow_hand_bottle_cap import ShadowHandBottleCap
 from tasks.shadow_hand_push_block import ShadowHandPushBlock
+from tasks.shadow_hand_push_block_game import ShadowHandPushBlockGame
 from tasks.shadow_hand_swing_cup import ShadowHandSwingCup
 from tasks.shadow_hand_grasp_and_place import ShadowHandGraspAndPlace
 from tasks.shadow_hand_scissors import ShadowHandScissors
