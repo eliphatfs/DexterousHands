@@ -363,20 +363,20 @@ class ShadowHandPushBlockGame(BaseTask):
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 0, 1.57)
 
         object_start_pose = gymapi.Transform()
-        object_start_pose.p = gymapi.Vec3(0.0, 0.15, 0.6)
+        object_start_pose.p = gymapi.Vec3(0.0, 0.55, 0.6)
         object_start_pose.r = gymapi.Quat().from_euler_zyx(1.57, 1.57, 0)
         pose_dx, pose_dy, pose_dz = -1.0, 0.0, -0.0
 
         block_start_pose = gymapi.Transform()
-        block_start_pose.p = gymapi.Vec3(0.0, -0.15, 0.6)
+        block_start_pose.p = gymapi.Vec3(0.0, -0.55, 0.6)
         block_start_pose.r = gymapi.Quat().from_euler_zyx(1.57, 1.57, 0)
 
         block_start_pose2 = gymapi.Transform()
-        block_start_pose2.p = gymapi.Vec3(0.0, 0.55, 0.6)
+        block_start_pose2.p = gymapi.Vec3(0.0, 0.15, 0.6)
         block_start_pose2.r = gymapi.Quat().from_euler_zyx(1.57, 1.57, 0)
 
         block_start_poseA2 = gymapi.Transform()
-        block_start_poseA2.p = gymapi.Vec3(0.0, -0.55, 0.6)
+        block_start_poseA2.p = gymapi.Vec3(0.0, -0.15, 0.6)
         block_start_poseA2.r = gymapi.Quat().from_euler_zyx(1.57, 1.57, 0)
         # object_start_pose.p.x = shadow_hand_start_pose.p.x + pose_dx
         # object_start_pose.p.y = shadow_hand_start_pose.p.y + pose_dy
