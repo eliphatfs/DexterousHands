@@ -915,9 +915,6 @@ class ShadowHandPushBlockGame(BaseTask):
 #####################################################################
 ###=========================jit functions=========================###
 #####################################################################
-
-
-@torch.jit.script
 def compute_hand_reward(
     rew_buf, reset_buf, reset_goal_buf, progress_buf, successes, consecutive_successes,
     max_episode_length: float, object_pos, object_rot, target_pos, target_rot, block_right_handle_pos, block_left_handle_pos, block_right_handle_2_pos, block_left_handle_2_pos,
