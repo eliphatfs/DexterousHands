@@ -806,9 +806,8 @@ class ShadowHandPushBlockGame(BaseTask):
                                                         gymtorch.unwrap_tensor(all_hand_indices), len(all_hand_indices))  
 
         all_indices = torch.unique(torch.cat([all_hand_indices,
-                                              self.object_indices,
-                                              self.table_indices,
-                                              self.block_indices]).to(torch.int32))
+                                              self.all_block_indices[env_ids].reshape(-1).to(torch.int32)
+                                              ]).to(torch.int32))
 
         self.hand_positions[all_indices.to(torch.long), :] = self.saved_root_tensor[all_indices.to(torch.long), 0:3]
         self.hand_orientations[all_indices.to(torch.long), :] = self.saved_root_tensor[all_indices.to(torch.long), 3:7]
