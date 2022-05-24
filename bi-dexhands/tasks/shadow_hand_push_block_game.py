@@ -765,7 +765,6 @@ class ShadowHandPushBlockGame(BaseTask):
 
         # self.root_state_tensor[self.object_indices[env_ids], 3:7] = new_object_rot
         self.root_state_tensor[self.object_indices[env_ids], 7:13] = torch.zeros_like(self.root_state_tensor[self.object_indices[env_ids], 7:13])
-        self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0] = torch.randn_like(self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0]) * 0.13
         object_indices = torch.unique(torch.cat([self.object_indices[env_ids],
                                                  self.goal_object_indices[env_ids],
                                                  self.goal_object_indices[goal_env_ids]]).to(torch.int32))
@@ -816,6 +815,7 @@ class ShadowHandPushBlockGame(BaseTask):
                                               gymtorch.unwrap_tensor(self.dof_state),
                                               gymtorch.unwrap_tensor(all_hand_indices), len(all_hand_indices))
                                               
+        self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0] = torch.randn_like(self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0]) * 0.13
         self.gym.set_actor_root_state_tensor_indexed(self.sim,
                                                      gymtorch.unwrap_tensor(self.root_state_tensor),
                                                      gymtorch.unwrap_tensor(all_indices), len(all_indices))
