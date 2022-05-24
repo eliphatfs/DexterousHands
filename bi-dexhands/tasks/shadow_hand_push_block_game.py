@@ -183,8 +183,8 @@ class ShadowHandPushBlockGame(BaseTask):
         self.root_state_tensor = gymtorch.wrap_tensor(actor_root_state_tensor).view(-1, 13)
         self.hand_positions = self.root_state_tensor[:, 0:3]
         self.hand_orientations = self.root_state_tensor[:, 3:7]
-        self.hand_linvels = self.root_state_tensor[:, 7:10]
-        self.hand_angvels = self.root_state_tensor[:, 10:13]
+        self.hand_linvels = torch.zeros_like(self.root_state_tensor[:, 7:10])
+        self.hand_angvels = torch.zeros_like(self.root_state_tensor[:, 10:13])
         self.saved_root_tensor = self.root_state_tensor.clone() 
 
         self.num_dofs = self.gym.get_sim_dof_count(self.sim) // self.num_envs
