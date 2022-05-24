@@ -739,7 +739,7 @@ class ShadowHandPushBlockGame(BaseTask):
         self.reset_goal_buf[env_ids] = 0
 
     def reset(self, env_ids, goal_env_ids):
-        self.env_type_ids[env_ids.cpu().numpy()] = np.random.choice([0, 1, 2, 3, 4], p=[0.8, 0.05, 0.05, 0.05, 0.05])
+        self.env_type_ids[env_ids.cpu().numpy()] = [np.random.choice([1, 2, 3, 4]) for _ in env_ids.cpu().numpy()]
         # randomization can happen only at reset time, since it can reset actor positions on GPU
         if self.randomize:
             self.apply_randomizations(self.randomization_params)
@@ -941,8 +941,8 @@ def compute_hand_reward(
     right_hand_dist_2 = torch.norm(block_right_handle_2_pos - right_hand_pos, p=2, dim=-1)  # , right_hand_pos.new_tensor((env_type_ids == 3) | (env_type_ids == 4)))
     left_hand_dist_1 = torch.norm(block_left_handle_pos - left_hand_pos, p=2, dim=-1)  # , right_hand_pos.new_tensor((env_type_ids == 1) | (env_type_ids == 3)))
     left_hand_dist_2 = torch.norm(block_left_handle_2_pos - left_hand_pos, p=2, dim=-1)  # , right_hand_pos.new_tensor((env_type_ids == 2) | (env_type_ids == 4)))
-    left_hand_rew = -torch.min(left_hand_dist_1, left_hand_dist_2)
-    right_hand_rew = -torch.min(right_hand_dist_1, right_hand_dist_2)
+    left_hand_rew = -(left_hand_dist_1 * ((env_type_ids == 1) | (env_type_ids == 2)) + left_hand_dist_2 * ((env_type_ids == 3) | (env_type_ids == 4)))
+    right_hand_rew = -(right_hand_dist_1 * ((env_type_ids == 1) | (env_type_ids == 3)), right_hand_dist_2 * ((env_type_ids == 2) | (env_type_ids == 4)))
 
     # right_hand_finger_dist = (torch.norm(block_right_handle_pos - right_hand_ff_pos, p=2, dim=-1) + torch.norm(block_right_handle_pos - right_hand_mf_pos, p=2, dim=-1)
     #                         + torch.norm(block_right_handle_pos - right_hand_rf_pos, p=2, dim=-1) + torch.norm(block_right_handle_pos - right_hand_lf_pos, p=2, dim=-1) 
