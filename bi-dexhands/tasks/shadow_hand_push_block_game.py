@@ -963,10 +963,10 @@ def compute_hand_reward(
     # up_rew =  torch.where(right_hand_finger_dist <= 0.3, torch.norm(bottle_cap_up - bottle_pos, p=2, dim=-1) * 30, up_rew)
 
     # b: betray c: cooperate
-    bb_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 200.0
-    cc_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 400.0
-    bc_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 300.0
-    cb_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 300.0
+    bb_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 20.0
+    cc_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 40.0
+    bc_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 30.0
+    cb_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 30.0
     game_rew = bb_p + cc_p + bc_p + cb_p
     successes = game_rew > 1.0
     # reward = torch.exp(-0.1*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.1*(left_hand_dist_rew * dist_reward_scale))
