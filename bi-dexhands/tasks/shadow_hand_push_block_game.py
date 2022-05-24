@@ -425,7 +425,7 @@ class ShadowHandPushBlockGame(BaseTask):
                 self.gym.create_asset_force_sensor(shadow_hand_asset, ft_handle, sensor_pose)
             for ft_a_handle in self.fingertip_another_handles:
                 self.gym.create_asset_force_sensor(shadow_hand_another_asset, ft_a_handle, sensor_pose)
-        self.env_type_ids = np.zeros(len(self.num_envs))
+        self.env_type_ids = np.zeros(self.num_envs)
         for i in range(self.num_envs):
             # create env instance
             env_ptr = self.gym.create_env(
