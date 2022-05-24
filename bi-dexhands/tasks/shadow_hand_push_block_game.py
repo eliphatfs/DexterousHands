@@ -101,7 +101,7 @@ class ShadowHandPushBlockGame(BaseTask):
             "openai": 42,
             "full_no_vel": 77,
             "full": 157,
-            "full_state": 422 - 11 + 6 + 6
+            "full_state": 422 - 11 + 6 + 6 + 4
         }
         self.num_hand_obs = 72 + 95 + 26 + 6
         self.up_axis = 'z'
@@ -712,6 +712,11 @@ class ShadowHandPushBlockGame(BaseTask):
         self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.block_left_handle_pos
         self.obs_buf[:, obj_obs_start + 19:obj_obs_start + 22] = self.block_right_handle_2_pos
         self.obs_buf[:, obj_obs_start + 22:obj_obs_start + 25] = self.block_left_handle_2_pos
+
+        self.obs_buf[:, obj_obs_start + 25] = self.obs_buf.new_tensor(self.env_type_ids == 1)
+        self.obs_buf[:, obj_obs_start + 26] = self.obs_buf.new_tensor(self.env_type_ids == 2)
+        self.obs_buf[:, obj_obs_start + 27] = self.obs_buf.new_tensor(self.env_type_ids == 3)
+        self.obs_buf[:, obj_obs_start + 28] = self.obs_buf.new_tensor(self.env_type_ids == 4)
         # goal_obs_start = obj_obs_start + 13  # 157 = 144 + 13
         # self.obs_buf[:, goal_obs_start:goal_obs_start + 7] = self.goal_pose
         # self.obs_buf[:, goal_obs_start + 7:goal_obs_start + 11] = quat_mul(self.object_rot, quat_conjugate(self.goal_rot))
