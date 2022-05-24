@@ -414,6 +414,7 @@ class ShadowHandPushBlockGame(BaseTask):
         self.goal_object_indices = []
         self.table_indices = []
         self.block_indices = []
+        self.all_block_indices = []
 
         self.fingertip_handles = [self.gym.find_asset_rigid_body_index(shadow_hand_asset, name) for name in self.fingertips]
         self.fingertip_another_handles = [self.gym.find_asset_rigid_body_index(shadow_hand_another_asset, name) for name in self.a_fingertips]
@@ -481,25 +482,30 @@ class ShadowHandPushBlockGame(BaseTask):
                 self.gym.enable_actor_dof_force_sensors(env_ptr, shadow_hand_another_actor)
             
             # add object
+            all_blocks = []
             object_handle = self.gym.create_actor(env_ptr, block_asset, object_start_pose, "object", i, 0, 0)
             self.object_init_state.append([object_start_pose.p.x, object_start_pose.p.y, object_start_pose.p.z,
                                            object_start_pose.r.x, object_start_pose.r.y, object_start_pose.r.z, object_start_pose.r.w,
                                            0, 0, 0, 0, 0, 0])
             object_idx = self.gym.get_actor_index(env_ptr, object_handle, gymapi.DOMAIN_SIM)
             self.object_indices.append(object_idx)
+            all_blocks.append(object_idx)
             # self.gym.set_actor_scale(env_ptr, object_handle, 0.3)
 
             block_handle = self.gym.create_actor(env_ptr, block_asset, block_start_pose, "block", i, 0, 0)
             block_idx = self.gym.get_actor_index(env_ptr, block_handle, gymapi.DOMAIN_SIM)
             self.block_indices.append(block_idx)
+            all_blocks.append(block_idx)
 
             block_handle = self.gym.create_actor(env_ptr, block_asset, block_start_pose2, "block2", i, 0, 0)
             block_idx = self.gym.get_actor_index(env_ptr, block_handle, gymapi.DOMAIN_SIM)
             self.block_indices.append(block_idx)
+            all_blocks.append(block_idx)
 
             block_handle = self.gym.create_actor(env_ptr, block_asset, block_start_poseA2, "blockA2", i, 0, 0)
             block_idx = self.gym.get_actor_index(env_ptr, block_handle, gymapi.DOMAIN_SIM)
             self.block_indices.append(block_idx)
+            all_blocks.append(block_idx)
 
             # add goal object
             goal_handle = self.gym.create_actor(env_ptr, goal_asset, goal_start_pose, "goal_object", i + self.num_envs, 0, 0)
@@ -512,6 +518,7 @@ class ShadowHandPushBlockGame(BaseTask):
             self.gym.set_rigid_body_texture(env_ptr, table_handle, 0, gymapi.MESH_VISUAL, table_texture_handle)
             table_idx = self.gym.get_actor_index(env_ptr, table_handle, gymapi.DOMAIN_SIM)
             self.table_indices.append(table_idx)
+            self.all_block_indices.append(all_blocks)
             
             if self.object_type != "block":
                 self.gym.set_rigid_body_color(
@@ -544,6 +551,7 @@ class ShadowHandPushBlockGame(BaseTask):
         self.goal_object_indices = to_torch(self.goal_object_indices, dtype=torch.long, device=self.device)
         self.table_indices = to_torch(self.table_indices, dtype=torch.long, device=self.device)
         self.block_indices = to_torch(self.block_indices, dtype=torch.long, device=self.device)
+        self.all_block_indices = to_torch(self.all_block_indices, dtype=torch.long, device=self.device)
 
     def compute_reward(self, actions):
         self.rew_buf[:], self.reset_buf[:], self.reset_goal_buf[:], self.progress_buf[:], self.successes[:], self.consecutive_successes[:] = compute_hand_reward(
@@ -757,7 +765,7 @@ class ShadowHandPushBlockGame(BaseTask):
 
         # self.root_state_tensor[self.object_indices[env_ids], 3:7] = new_object_rot
         self.root_state_tensor[self.object_indices[env_ids], 7:13] = torch.zeros_like(self.root_state_tensor[self.object_indices[env_ids], 7:13])
-
+        self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0] = torch.randn_like(self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0]) * 0.13
         object_indices = torch.unique(torch.cat([self.object_indices[env_ids],
                                                  self.goal_object_indices[env_ids],
                                                  self.goal_object_indices[goal_env_ids]]).to(torch.int32))
@@ -930,10 +938,10 @@ def compute_hand_reward(
     # right_goal_dist = torch.norm(target_pos - block_right_handle_pos, p=2, dim=-1)
     # goal_dist = target_pos[:, 2] - object_pos[:, 2]
 
-    right_hand_dist_1 = torch.max(torch.norm(block_right_handle_pos - right_hand_pos, p=2, dim=-1), right_hand_pos.new_tensor((env_type_ids == 1) | (env_type_ids == 2)))
-    right_hand_dist_2 = torch.max(torch.norm(block_right_handle_2_pos - right_hand_pos, p=2, dim=-1), right_hand_pos.new_tensor((env_type_ids == 3) | (env_type_ids == 4)))
-    left_hand_dist_1 = torch.max(torch.norm(block_left_handle_pos - left_hand_pos, p=2, dim=-1), right_hand_pos.new_tensor((env_type_ids == 1) | (env_type_ids == 3)))
-    left_hand_dist_2 = torch.max(torch.norm(block_left_handle_2_pos - left_hand_pos, p=2, dim=-1), right_hand_pos.new_tensor((env_type_ids == 2) | (env_type_ids == 4)))
+    right_hand_dist_1 = torch.norm(block_right_handle_pos - right_hand_pos, p=2, dim=-1)  # , right_hand_pos.new_tensor((env_type_ids == 1) | (env_type_ids == 2)))
+    right_hand_dist_2 = torch.norm(block_right_handle_2_pos - right_hand_pos, p=2, dim=-1)  # , right_hand_pos.new_tensor((env_type_ids == 3) | (env_type_ids == 4)))
+    left_hand_dist_1 = torch.norm(block_left_handle_pos - left_hand_pos, p=2, dim=-1)  # , right_hand_pos.new_tensor((env_type_ids == 1) | (env_type_ids == 3)))
+    left_hand_dist_2 = torch.norm(block_left_handle_2_pos - left_hand_pos, p=2, dim=-1)  # , right_hand_pos.new_tensor((env_type_ids == 2) | (env_type_ids == 4)))
     left_hand_rew = -torch.min(left_hand_dist_1, left_hand_dist_2)
     right_hand_rew = -torch.min(right_hand_dist_1, right_hand_dist_2)
 
@@ -961,10 +969,10 @@ def compute_hand_reward(
     # up_rew =  torch.where(right_hand_finger_dist <= 0.3, torch.norm(bottle_cap_up - bottle_pos, p=2, dim=-1) * 30, up_rew)
 
     # b: betray c: cooperate
-    bb_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 20.0
-    cc_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 40.0
-    bc_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 30.0
-    cb_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 30.0
+    bb_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 200.0
+    cc_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 400.0
+    bc_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 300.0
+    cb_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 300.0
     game_rew = bb_p + cc_p + bc_p + cb_p
     successes = game_rew > 1.0
     # reward = torch.exp(-0.1*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.1*(left_hand_dist_rew * dist_reward_scale))
