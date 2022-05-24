@@ -425,7 +425,7 @@ class ShadowHandPushBlockGame(BaseTask):
                 self.gym.create_asset_force_sensor(shadow_hand_asset, ft_handle, sensor_pose)
             for ft_a_handle in self.fingertip_another_handles:
                 self.gym.create_asset_force_sensor(shadow_hand_another_asset, ft_a_handle, sensor_pose)
-        
+        self.env_type_ids = np.zeros(len(self.num_envs))
         for i in range(self.num_envs):
             # create env instance
             env_ptr = self.gym.create_env(
@@ -553,7 +553,7 @@ class ShadowHandPushBlockGame(BaseTask):
             self.left_hand_ff_pos, self.left_hand_mf_pos, self.left_hand_rf_pos, self.left_hand_lf_pos, self.left_hand_th_pos, 
             self.dist_reward_scale, self.rot_reward_scale, self.rot_eps, self.actions, self.action_penalty_scale,
             self.success_tolerance, self.reach_goal_bonus, self.fall_dist, self.fall_penalty,
-            self.max_consecutive_successes, self.av_factor, (self.object_type == "pen")
+            self.max_consecutive_successes, self.av_factor, (self.object_type == "pen"), self.env_type_ids
         )
 
         self.extras['successes'] = self.successes
@@ -731,6 +731,7 @@ class ShadowHandPushBlockGame(BaseTask):
         self.reset_goal_buf[env_ids] = 0
 
     def reset(self, env_ids, goal_env_ids):
+        self.env_type_ids[env_ids] = np.random.choice([0, 1, 2, 3, 4], p=[0.8, 0.05, 0.05, 0.05, 0.05])
         # randomization can happen only at reset time, since it can reset actor positions on GPU
         if self.randomize:
             self.apply_randomizations(self.randomization_params)
@@ -925,17 +926,17 @@ def compute_hand_reward(
     dist_reward_scale: float, rot_reward_scale: float, rot_eps: float,
     actions, action_penalty_scale: float,
     success_tolerance: float, reach_goal_bonus: float, fall_dist: float,
-    fall_penalty: float, max_consecutive_successes: int, av_factor: float, ignore_z_rot: bool
+    fall_penalty: float, max_consecutive_successes: int, av_factor: float, ignore_z_rot: bool, env_type_ids
 ):
     # Distance from the hand to the object
     # left_goal_dist = torch.norm(target_pos - block_left_handle_pos, p=2, dim=-1)
     # right_goal_dist = torch.norm(target_pos - block_right_handle_pos, p=2, dim=-1)
     # goal_dist = target_pos[:, 2] - object_pos[:, 2]
 
-    right_hand_dist_1 = torch.norm(block_right_handle_pos - right_hand_pos, p=2, dim=-1)
-    right_hand_dist_2 = torch.norm(block_right_handle_2_pos - right_hand_pos, p=2, dim=-1)
-    left_hand_dist_1 = torch.norm(block_left_handle_pos - left_hand_pos, p=2, dim=-1)
-    left_hand_dist_2 = torch.norm(block_left_handle_2_pos - left_hand_pos, p=2, dim=-1)
+    right_hand_dist_1 = torch.norm(block_right_handle_pos - right_hand_pos, p=2, dim=-1) + ((env_type_ids == 1) | (env_type_ids == 2)).float()
+    right_hand_dist_2 = torch.norm(block_right_handle_2_pos - right_hand_pos, p=2, dim=-1) + ((env_type_ids == 3) | (env_type_ids == 4)).float()
+    left_hand_dist_1 = torch.norm(block_left_handle_pos - left_hand_pos, p=2, dim=-1) + ((env_type_ids == 1) | (env_type_ids == 3)).float()
+    left_hand_dist_2 = torch.norm(block_left_handle_2_pos - left_hand_pos, p=2, dim=-1) + ((env_type_ids == 2) | (env_type_ids == 4)).float()
     left_hand_rew = -torch.min(left_hand_dist_1, left_hand_dist_2)
     right_hand_rew = -torch.min(right_hand_dist_1, right_hand_dist_2)
 
