@@ -18,9 +18,11 @@ def train():
     print("Algorithm: ", args.algo)
     agent_index = get_AgentIndex(cfg)
 
-    if args.algo in ["mappo", "happo", "hatrpo","maddpg","ippo"]: 
+    if args.algo in ["mappo", "happo", "hatrpo","maddpg","ippo", 'hppo']: 
         # maddpg exists a bug now 
         args.task_type = "MultiAgent"
+        if args.algo == 'hppo':
+            args.algo = 'ppo'
 
         task, env = parse_task(args, cfg, cfg_train, sim_params, agent_index)
 
