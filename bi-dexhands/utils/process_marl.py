@@ -20,7 +20,7 @@ def process_MultiAgentRL(args,env, config, model_dir=""):
     config["n_rollout_threads"] = env.num_envs
     config["n_eval_rollout_threads"] = env.num_envs
 
-    if args.algo in ["mappo", "happo", "hatrpo", "ppo"]:
+    if args.algo in ["mappo", "happo", "hatrpo", "hppo"]:
         # on policy marl
         from algorithms.marl.runner import Runner
         marl = Runner(vec_env=env,

@@ -1,35 +1,64 @@
-seed: -1
+env_name: mappo
+algorithm_name: mappo
+experiment_name: check
+run_dir: ./logs
+use_centralized_V: False
+use_obs_instead_of_state: False
+num_env_steps: 100000000
+episode_length: 8
+n_rollout_threads: 80
+n_eval_rollout_threads: 1
+use_linear_lr_decay: False
+hidden_size: 512
+use_render: False
+recurrent_N: 1
+use_single_network: False
 
-clip_observations: 5.0
-clip_actions: 1.0
+save_interval: 1
+use_eval: False
+eval_interval: 25
+log_interval: 25
+eval_episodes: 10000
 
-policy: # only works for MlpPolicy right now
-  pi_hid_sizes: [1024, 1024, 512]
-  vf_hid_sizes: [1024, 1024, 512]
-  activation: elu # can be elu, relu, selu, crelu, lrelu, tanh, sigmoid
-learn:
-  agent_name: shadow_hand
-  test: False
-  resume: 0
-  save_interval: 200 # check for potential saves every this many iterations
-  print_log: True
+gamma: 0.96
+gae_lambda: 0.95
+use_gae: True
+use_popart: True
+use_valuenorm: False
+use_proper_time_limits: False
 
-  # rollout params
-  max_iterations: 5000
+kl_threshold: 0.016
+ls_step: 10
+accept_ratio: 0.5
+clip_param: 0.2
+ppo_epoch: 5
+num_mini_batch: 1
+data_chunk_length: 
+value_loss_coef: 1
+entropy_coef: 0.0
+max_grad_norm: 10
+huber_delta: 10.0
+use_recurrent_policy: False
+use_naive_recurrent_policy: False
+use_max_grad_norm: True
+use_clipped_value_loss: True
+use_huber_loss: True
+use_value_active_masks: False
+use_policy_active_masks: False
 
-  # training params
-  cliprange: 0.2
-  ent_coef: 0
-  nsteps: 8
-  noptepochs: 5
-  nminibatches: 4 # this is per agent
-  max_grad_norm: 1
-  optim_stepsize: 3.e-4 # 3e-4 is default for single agent training with constant schedule
-  schedule: adaptive # could be adaptive or linear or fixed
-  desired_kl: 0.016
-  gamma: 0.99
-  lam: 0.95
-  init_noise_std: 0.8
+lr: 5.e-4
+critic_lr: 5.e-4
+opti_eps: 1.e-5
+weight_decay: 0.0
 
-  log_interval: 1
-  asymmetric: False
+gain: 0.01
+actor_gain: 0.01
+use_orthogonal: True
+
+use_feature_normalization: True
+use_ReLU: True
+stacked_frames: 1
+layer_N: 2
+
+std_x_coef: 1
+std_y_coef: 0.5
