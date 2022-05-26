@@ -664,7 +664,7 @@ class ShadowHandPushBlockGame(BaseTask):
         num_ft_states = 13 * int(self.num_fingertips / 2)  # 65
         num_ft_force_torques = 6 * int(self.num_fingertips / 2)  # 30
 
-        self.obs_buf[:, 0:self.num_shadow_hand_dofs] = unscale(self.shadow_hand_dof_pos,
+        '''self.obs_buf[:, 0:self.num_shadow_hand_dofs] = unscale(self.shadow_hand_dof_pos,
                                                             self.shadow_hand_dof_lower_limits, self.shadow_hand_dof_upper_limits)
         self.obs_buf[:, self.num_shadow_hand_dofs:2*self.num_shadow_hand_dofs] = self.vel_obs_scale * self.shadow_hand_dof_vel
         self.obs_buf[:, 2*self.num_shadow_hand_dofs:3*self.num_shadow_hand_dofs] = self.force_torque_obs_scale * self.dof_force_tensor[:, :24]
@@ -716,9 +716,12 @@ class ShadowHandPushBlockGame(BaseTask):
         self.obs_buf[:, obj_obs_start + 25] = self.obs_buf.new_tensor(self.env_type_ids == 1)
         self.obs_buf[:, obj_obs_start + 26] = self.obs_buf.new_tensor(self.env_type_ids == 2)
         self.obs_buf[:, obj_obs_start + 27] = self.obs_buf.new_tensor(self.env_type_ids == 3)
-        self.obs_buf[:, obj_obs_start + 28] = self.obs_buf.new_tensor(self.env_type_ids == 4)
-        self.obs_buf[:, obj_obs_start + 29: obj_obs_start + 32] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 2)).to(self.device).unsqueeze(-1), self.block_left_handle_pos - self.left_hand_pos, self.block_left_handle_2_pos - self.left_hand_pos) * 10
-        self.obs_buf[:, obj_obs_start + 32: obj_obs_start + 35] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 3)).to(self.device).unsqueeze(-1), self.block_right_handle_pos - self.right_hand_pos, self.block_right_handle_2_pos - self.right_hand_pos) * 10
+        self.obs_buf[:, obj_obs_start + 28] = self.obs_buf.new_tensor(self.env_type_ids == 4)'''
+        # self.obs_buf[:, obj_obs_start + 29: obj_obs_start + 32] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 2)).to(self.device).unsqueeze(-1), self.block_left_handle_pos - self.left_hand_pos, self.block_left_handle_2_pos - self.left_hand_pos) * 10
+        # self.obs_buf[:, obj_obs_start + 32: obj_obs_start + 35] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 3)).to(self.device).unsqueeze(-1), self.block_right_handle_pos - self.right_hand_pos, self.block_right_handle_2_pos - self.right_hand_pos) * 10
+        self.obs_buf[:] = 0
+        self.obs_buf[:, 0: 3] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 2)).to(self.device).unsqueeze(-1), self.block_left_handle_pos - self.left_hand_pos, self.block_left_handle_2_pos - self.left_hand_pos)
+        self.obs_buf[:, 3: 6] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 3)).to(self.device).unsqueeze(-1), self.block_right_handle_pos - self.right_hand_pos, self.block_right_handle_2_pos - self.right_hand_pos)
         # print(self.obs_buf[0])
         # goal_obs_start = obj_obs_start + 13  # 157 = 144 + 13
         # self.obs_buf[:, goal_obs_start:goal_obs_start + 7] = self.goal_pose
