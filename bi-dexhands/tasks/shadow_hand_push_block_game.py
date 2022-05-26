@@ -826,8 +826,8 @@ class ShadowHandPushBlockGame(BaseTask):
                                               gymtorch.unwrap_tensor(self.dof_state),
                                               gymtorch.unwrap_tensor(all_hand_indices), len(all_hand_indices))
                                               
-        self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0] = torch.rand_like(self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0]) - 0.5
-        self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 1] = torch.rand_like(self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0]) - 0.5
+        # self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0] = torch.rand_like(self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0]) - 0.5
+        # self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 1] = torch.rand_like(self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0]) - 0.5
         self.gym.set_actor_root_state_tensor_indexed(self.sim,
                                                      gymtorch.unwrap_tensor(self.root_state_tensor),
                                                      gymtorch.unwrap_tensor(all_indices), len(all_indices))
@@ -980,14 +980,15 @@ def compute_hand_reward(
     # up_rew =  torch.where(right_hand_finger_dist <= 0.3, torch.norm(bottle_cap_up - bottle_pos, p=2, dim=-1) * 30, up_rew)
 
     # b: betray c: cooperate
-    # bb_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 200.0
-    # cc_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 400.0
-    # bc_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 300.0
-    # cb_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 300.0
-    # game_rew = bb_p + cc_p + bc_p + cb_p
-    successes = (left_hand_rew > -0.1) & (right_hand_rew > -0.1)
+    bb_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 200.0
+    cc_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 400.0
+    bc_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 300.0
+    cb_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 300.0
+    game_rew = bb_p + cc_p + bc_p + cb_p
+    # successes = (left_hand_rew > -0.1) & (right_hand_rew > -0.1)
+    successes = game_rew > 1
     # reward = torch.exp(-0.1*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.1*(left_hand_dist_rew * dist_reward_scale))
-    reward = left_hand_rew + right_hand_rew
+    reward = left_hand_rew + right_hand_rew + game_rew
 
     resets = torch.where(successes, torch.ones_like(reset_buf), reset_buf)
 

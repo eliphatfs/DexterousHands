@@ -156,8 +156,8 @@ sim:
   physx:
     num_threads: 6
     solver_type: 1  # 0: pgs, 1: tgs
-    num_position_iterations: 6
-    num_velocity_iterations: 1
+    num_position_iterations: 4
+    num_velocity_iterations: 0
     contact_offset: 0.01
     rest_offset: 0.005
     bounce_threshold_velocity: 2.0
