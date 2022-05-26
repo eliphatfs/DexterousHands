@@ -664,7 +664,7 @@ class ShadowHandPushBlockGame(BaseTask):
         num_ft_states = 13 * int(self.num_fingertips / 2)  # 65
         num_ft_force_torques = 6 * int(self.num_fingertips / 2)  # 30
 
-        '''self.obs_buf[:, 0:self.num_shadow_hand_dofs] = unscale(self.shadow_hand_dof_pos,
+        self.obs_buf[:, 0:self.num_shadow_hand_dofs] = unscale(self.shadow_hand_dof_pos,
                                                             self.shadow_hand_dof_lower_limits, self.shadow_hand_dof_upper_limits)
         self.obs_buf[:, self.num_shadow_hand_dofs:2*self.num_shadow_hand_dofs] = self.vel_obs_scale * self.shadow_hand_dof_vel
         self.obs_buf[:, 2*self.num_shadow_hand_dofs:3*self.num_shadow_hand_dofs] = self.force_torque_obs_scale * self.dof_force_tensor[:, :24]
@@ -716,12 +716,12 @@ class ShadowHandPushBlockGame(BaseTask):
         self.obs_buf[:, obj_obs_start + 25] = self.obs_buf.new_tensor(self.env_type_ids == 1)
         self.obs_buf[:, obj_obs_start + 26] = self.obs_buf.new_tensor(self.env_type_ids == 2)
         self.obs_buf[:, obj_obs_start + 27] = self.obs_buf.new_tensor(self.env_type_ids == 3)
-        self.obs_buf[:, obj_obs_start + 28] = self.obs_buf.new_tensor(self.env_type_ids == 4)'''
-        # self.obs_buf[:, obj_obs_start + 29: obj_obs_start + 32] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 2)).to(self.device).unsqueeze(-1), self.block_left_handle_pos - self.left_hand_pos, self.block_left_handle_2_pos - self.left_hand_pos) * 10
-        # self.obs_buf[:, obj_obs_start + 32: obj_obs_start + 35] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 3)).to(self.device).unsqueeze(-1), self.block_right_handle_pos - self.right_hand_pos, self.block_right_handle_2_pos - self.right_hand_pos) * 10
-        self.obs_buf[:] = 0
-        self.obs_buf[:, 0: 3] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 2)).to(self.device).unsqueeze(-1), self.block_left_handle_pos - self.left_hand_pos, self.block_left_handle_2_pos - self.left_hand_pos)
-        self.obs_buf[:, 3: 6] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 3)).to(self.device).unsqueeze(-1), self.block_right_handle_pos - self.right_hand_pos, self.block_right_handle_2_pos - self.right_hand_pos)
+        self.obs_buf[:, obj_obs_start + 28] = self.obs_buf.new_tensor(self.env_type_ids == 4)
+        self.obs_buf[:, obj_obs_start + 29: obj_obs_start + 32] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 2)).to(self.device).unsqueeze(-1), self.block_left_handle_pos - self.left_hand_pos, self.block_left_handle_2_pos - self.left_hand_pos) * 5
+        self.obs_buf[:, obj_obs_start + 32: obj_obs_start + 35] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 3)).to(self.device).unsqueeze(-1), self.block_right_handle_pos - self.right_hand_pos, self.block_right_handle_2_pos - self.right_hand_pos) * 5
+        # self.obs_buf[:] = 0
+        # self.obs_buf[:, 0: 3] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 2)).to(self.device).unsqueeze(-1), self.block_left_handle_pos - self.left_hand_pos, self.block_left_handle_2_pos - self.left_hand_pos)
+        # self.obs_buf[:, 3: 6] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 3)).to(self.device).unsqueeze(-1), self.block_right_handle_pos - self.right_hand_pos, self.block_right_handle_2_pos - self.right_hand_pos)
         # print(self.obs_buf[0])
         # goal_obs_start = obj_obs_start + 13  # 157 = 144 + 13
         # self.obs_buf[:, goal_obs_start:goal_obs_start + 7] = self.goal_pose
@@ -826,7 +826,8 @@ class ShadowHandPushBlockGame(BaseTask):
                                               gymtorch.unwrap_tensor(self.dof_state),
                                               gymtorch.unwrap_tensor(all_hand_indices), len(all_hand_indices))
                                               
-        # self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0] = torch.randn_like(self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0]) * 0.13
+        self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0] = torch.rand_like(self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0]) - 0.5
+        self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 1] = torch.rand_like(self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0]) - 0.5
         self.gym.set_actor_root_state_tensor_indexed(self.sim,
                                                      gymtorch.unwrap_tensor(self.root_state_tensor),
                                                      gymtorch.unwrap_tensor(all_indices), len(all_indices))
@@ -979,14 +980,14 @@ def compute_hand_reward(
     # up_rew =  torch.where(right_hand_finger_dist <= 0.3, torch.norm(bottle_cap_up - bottle_pos, p=2, dim=-1) * 30, up_rew)
 
     # b: betray c: cooperate
-    bb_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 200.0
-    cc_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 400.0
-    bc_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 300.0
-    cb_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 300.0
-    game_rew = bb_p + cc_p + bc_p + cb_p
-    successes = game_rew > 1.0
+    # bb_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 200.0
+    # cc_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 400.0
+    # bc_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 300.0
+    # cb_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 300.0
+    # game_rew = bb_p + cc_p + bc_p + cb_p
+    successes = (left_hand_rew > -0.1) & (right_hand_rew > -0.1)
     # reward = torch.exp(-0.1*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.1*(left_hand_dist_rew * dist_reward_scale))
-    reward = left_hand_rew + right_hand_rew + game_rew
+    reward = left_hand_rew + right_hand_rew
 
     resets = torch.where(successes, torch.ones_like(reset_buf), reset_buf)
 
