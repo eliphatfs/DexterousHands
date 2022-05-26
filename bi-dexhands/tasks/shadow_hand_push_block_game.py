@@ -717,8 +717,8 @@ class ShadowHandPushBlockGame(BaseTask):
         self.obs_buf[:, obj_obs_start + 26] = self.obs_buf.new_tensor(self.env_type_ids == 2)
         self.obs_buf[:, obj_obs_start + 27] = self.obs_buf.new_tensor(self.env_type_ids == 3)
         self.obs_buf[:, obj_obs_start + 28] = self.obs_buf.new_tensor(self.env_type_ids == 4)
-        self.obs_buf[:, obj_obs_start + 29: obj_obs_start + 32] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 2)).to(self.device), self.block_left_handle_pos - self.left_hand_pos, self.block_left_handle_2_pos - self.left_hand_pos)
-        self.obs_buf[:, obj_obs_start + 32: obj_obs_start + 35] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 3)).to(self.device), self.block_right_handle_pos - self.right_hand_pos, self.block_right_handle_2_pos - self.right_hand_pos)
+        self.obs_buf[:, obj_obs_start + 29: obj_obs_start + 32] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 2)).to(self.device).unsqueeze(-1), self.block_left_handle_pos - self.left_hand_pos, self.block_left_handle_2_pos - self.left_hand_pos)
+        self.obs_buf[:, obj_obs_start + 32: obj_obs_start + 35] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 3)).to(self.device).unsqueeze(-1), self.block_right_handle_pos - self.right_hand_pos, self.block_right_handle_2_pos - self.right_hand_pos)
         # goal_obs_start = obj_obs_start + 13  # 157 = 144 + 13
         # self.obs_buf[:, goal_obs_start:goal_obs_start + 7] = self.goal_pose
         # self.obs_buf[:, goal_obs_start + 7:goal_obs_start + 11] = quat_mul(self.object_rot, quat_conjugate(self.goal_rot))
