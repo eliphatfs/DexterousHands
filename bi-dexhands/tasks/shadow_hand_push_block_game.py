@@ -103,7 +103,7 @@ class ShadowHandPushBlockGame(BaseTask):
             "full": 157,
             "full_state": 422 - 11 + 6 + 6 + 6
         }
-        self.num_hand_obs = 72 + 95 + 26 + 6
+        self.num_hand_obs = 72 + 95 + 26 + 6 + 3
         self.up_axis = 'z'
 
         self.fingertips = ["robot0:ffdistal", "robot0:mfdistal", "robot0:rfdistal", "robot0:lfdistal", "robot0:thdistal"]
