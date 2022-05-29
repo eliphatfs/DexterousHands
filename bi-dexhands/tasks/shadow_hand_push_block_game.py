@@ -953,7 +953,8 @@ def compute_hand_reward(
     right_hand_dist_2 = torch.norm(block_right_handle_2_pos - right_hand_pos, p=2, dim=-1)  # , right_hand_pos.new_tensor((env_type_ids == 3) | (env_type_ids == 4)))
     left_hand_dist_1 = torch.norm(block_left_handle_pos - left_hand_pos, p=2, dim=-1)  # , right_hand_pos.new_tensor((env_type_ids == 1) | (env_type_ids == 3)))
     left_hand_dist_2 = torch.norm(block_left_handle_2_pos - left_hand_pos, p=2, dim=-1)  # , right_hand_pos.new_tensor((env_type_ids == 2) | (env_type_ids == 4)))
-    left_hand_rew = -(left_hand_dist_1 * right_hand_pos.new_tensor((env_type_ids == 1) | (env_type_ids == 2)) + left_hand_dist_2 * right_hand_pos.new_tensor((env_type_ids == 3) | (env_type_ids == 4)))
+    left_hand_rew = -torch.min(left_hand_dist_1, left_hand_dist_2)
+    # left_hand_rew = -(left_hand_dist_1 * right_hand_pos.new_tensor((env_type_ids == 1) | (env_type_ids == 2)) + left_hand_dist_2 * right_hand_pos.new_tensor((env_type_ids == 3) | (env_type_ids == 4)))
     right_hand_rew = -(right_hand_dist_1 * right_hand_pos.new_tensor((env_type_ids == 1) | (env_type_ids == 3)) + right_hand_dist_2 * right_hand_pos.new_tensor((env_type_ids == 2) | (env_type_ids == 4)))
 
     # right_hand_finger_dist = (torch.norm(block_right_handle_pos - right_hand_ff_pos, p=2, dim=-1) + torch.norm(block_right_handle_pos - right_hand_mf_pos, p=2, dim=-1)
