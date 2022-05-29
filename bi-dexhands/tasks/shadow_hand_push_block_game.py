@@ -983,13 +983,18 @@ def compute_hand_reward(
     # b: betray c: cooperate
     bb_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 200.0
     cc_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 400.0
-    bc_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 300.0
-    cb_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 300.0
-    game_rew = bb_p + cc_p + bc_p + cb_p
+    bc_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 0.0
+    cb_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 600.0
+    game_rew_right = bb_p + cc_p + bc_p + cb_p
+    bb_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 200.0
+    cc_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 400.0
+    bc_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 600.0
+    cb_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 0.0
+    game_rew_left = bb_p + cc_p + bc_p + cb_p
     # successes = (left_hand_rew > -0.1) & (right_hand_rew > -0.1)
-    successes = game_rew > 1
+    successes = game_rew_left > 1
     # reward = torch.exp(-0.1*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.1*(left_hand_dist_rew * dist_reward_scale))
-    reward = left_hand_rew + right_hand_rew + game_rew
+    reward = left_hand_rew + right_hand_rew + game_rew_left + game_rew_right
 
     resets = torch.where(successes, torch.ones_like(reset_buf), reset_buf)
 
@@ -1003,7 +1008,7 @@ def compute_hand_reward(
 
     cons_successes = torch.where(num_resets > 0, av_factor*finished_cons_successes/num_resets + (1.0 - av_factor)*consecutive_successes, consecutive_successes)
 
-    return reward, resets, goal_resets, progress_buf, successes, cons_successes, torch.stack([right_hand_rew + game_rew, left_hand_rew + game_rew], -1)
+    return reward, resets, goal_resets, progress_buf, successes, cons_successes, torch.stack([right_hand_rew + game_rew_right, left_hand_rew + game_rew_left], -1)
 
 
 @torch.jit.script
