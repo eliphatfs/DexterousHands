@@ -1,0 +1,9 @@
+python -u train.py --task=ShadowHandPushBlockGame --algo=hppo --seed=42 --cfg_env=cfg/shadow_hand_push_block_coo.yaml | tee logs/coo_42.log
+python -u train.py --task=ShadowHandPushBlockGame --algo=hppo --seed=43 --cfg_env=cfg/shadow_hand_push_block_coo.yaml | tee logs/coo_43.log
+python -u train.py --task=ShadowHandPushBlockGame --algo=hppo --seed=44 --cfg_env=cfg/shadow_hand_push_block_coo.yaml | tee logs/coo_44.log
+python -u train.py --task=ShadowHandPushBlockGame --algo=hppo --seed=42 --cfg_env=cfg/shadow_hand_push_block_game.yaml | tee logs/game_42.log
+python -u train.py --task=ShadowHandPushBlockGame --algo=hppo --seed=43 --cfg_env=cfg/shadow_hand_push_block_game.yaml | tee logs/game_43.log
+python -u train.py --task=ShadowHandPushBlockGame --algo=hppo --seed=44 --cfg_env=cfg/shadow_hand_push_block_game.yaml | tee logs/game_44.log
+python -u train.py --task=ShadowHandPushBlockGame --algo=happo --seed=42 --cfg_env=cfg/shadow_hand_push_block_1reward.yaml | tee logs/happo_42.log
+python -u train.py --task=ShadowHandPushBlockGame --algo=happo --seed=43 --cfg_env=cfg/shadow_hand_push_block_1reward.yaml | tee logs/happo_43.log
+python -u train.py --task=ShadowHandPushBlockGame --algo=happo --seed=44 --cfg_env=cfg/shadow_hand_push_block_1reward.yaml | tee logs/happo_44.log
