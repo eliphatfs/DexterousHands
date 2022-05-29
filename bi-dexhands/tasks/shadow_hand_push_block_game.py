@@ -28,6 +28,7 @@ class ShadowHandPushBlockGame(BaseTask):
         self.randomization_params = self.cfg["task"]["randomization_params"]
         self.aggregate_mode = self.cfg["env"]["aggregateMode"]
         self.reward_mode = self.cfg["env"]["rewardMode"]
+        print("Reward mode:", self.reward_mode)
 
         self.dist_reward_scale = self.cfg["env"]["distRewardScale"]
         self.rot_reward_scale = self.cfg["env"]["rotRewardScale"]
@@ -929,7 +930,7 @@ class ShadowHandPushBlockGame(BaseTask):
         self.gym.add_lines(self.viewer, env, 1, [p0[0], p0[1], p0[2], posz[0], posz[1], posz[2]], [0.1, 0.1, 0.85])
 
 
-game_results = []
+game_results = [0] * 4
 
 #####################################################################
 ###=========================jit functions=========================###
@@ -981,15 +982,19 @@ def compute_hand_reward(
     # up_rew =  torch.where(right_hand_finger_dist <= 0.3, torch.norm(bottle_cap_up - bottle_pos, p=2, dim=-1) * 30, up_rew)
 
     # b: betray c: cooperate
-    bb_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 200.0
-    cc_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 400.0
-    bc_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 0.0
-    cb_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 600.0
+    bb_fp = (left_hand_dist_1 < 0.11) & (right_hand_dist_1 < 0.11)
+    cc_fp = (left_hand_dist_2 < 0.11) & (right_hand_dist_2 < 0.11)
+    bc_fp = (left_hand_dist_1 < 0.11) & (right_hand_dist_2 < 0.11)
+    cb_fp = (left_hand_dist_2 < 0.11) & (right_hand_dist_1 < 0.11)
+    bb_p = (bb_fp).float() * 200.0
+    cc_p = (cc_fp).float() * 400.0
+    bc_p = (bc_fp).float() * 0.0
+    cb_p = (cb_fp).float() * 600.0
     game_rew_right = bb_p + cc_p + bc_p + cb_p
-    bb_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 200.0
-    cc_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 400.0
-    bc_p = ((left_hand_dist_1 < 0.11) & (right_hand_dist_2 < 0.11)).float() * 600.0
-    cb_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 0.0
+    bb_p = (bb_fp).float() * 200.0
+    cc_p = (cc_fp).float() * 400.0
+    bc_p = (bc_fp).float() * 600.0
+    cb_p = (cb_fp).float() * 0.0
     game_rew_left = bb_p + cc_p + bc_p + cb_p
     # successes = (left_hand_rew > -0.1) & (right_hand_rew > -0.1)
     successes = (game_rew_left + game_rew_right) > 1
@@ -997,6 +1002,12 @@ def compute_hand_reward(
     reward = left_hand_rew + right_hand_rew + game_rew_left + game_rew_right
 
     resets = torch.where(successes, torch.ones_like(reset_buf), reset_buf)
+    if successes.any().item():
+        game_results[0] += bb_fp.long().sum().item()
+        game_results[1] += cc_fp.long().sum().item()
+        game_results[2] += bc_fp.long().sum().item()
+        game_results[3] += cb_fp.long().sum().item()
+        print("Game results:", game_results)
 
     # Find out which envs hit the goal and update successes count
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
