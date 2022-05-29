@@ -1003,7 +1003,7 @@ def compute_hand_reward(
 
     cons_successes = torch.where(num_resets > 0, av_factor*finished_cons_successes/num_resets + (1.0 - av_factor)*consecutive_successes, consecutive_successes)
 
-    return reward, resets, goal_resets, progress_buf, successes, cons_successes, torch.stack([right_hand_rew, left_hand_rew], -1)
+    return reward, resets, goal_resets, progress_buf, successes, cons_successes, torch.stack([right_hand_rew + game_rew, left_hand_rew + game_rew], -1)
 
 
 @torch.jit.script
