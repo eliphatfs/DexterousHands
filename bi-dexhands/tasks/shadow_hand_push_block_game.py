@@ -680,7 +680,7 @@ class ShadowHandPushBlockGame(BaseTask):
         self.obs_buf[:, hand_pose_start+4:hand_pose_start+5] = get_euler_xyz(self.hand_orientations[self.hand_indices, :])[1].unsqueeze(-1)
         self.obs_buf[:, hand_pose_start+5:hand_pose_start+6] = get_euler_xyz(self.hand_orientations[self.hand_indices, :])[2].unsqueeze(-1)
 
-        self.obs_buf[:, hand_pose_start + 6: hand_pose_start + 9] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 2)).to(self.device).unsqueeze(-1), self.block_left_handle_pos - self.left_hand_pos, self.block_left_handle_2_pos - self.left_hand_pos) * 5
+        self.obs_buf[:, hand_pose_start + 6: hand_pose_start + 9] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 3)).to(self.device).unsqueeze(-1), self.block_right_handle_pos - self.right_hand_pos, self.block_right_handle_2_pos - self.right_hand_pos) * 5
         action_obs_start = hand_pose_start + 9
         self.obs_buf[:, action_obs_start:action_obs_start + 26] = self.actions[:, :26]
 
@@ -702,7 +702,7 @@ class ShadowHandPushBlockGame(BaseTask):
         self.obs_buf[:, hand_another_pose_start+4:hand_another_pose_start+5] = get_euler_xyz(self.hand_orientations[self.another_hand_indices, :])[1].unsqueeze(-1)
         self.obs_buf[:, hand_another_pose_start+5:hand_another_pose_start+6] = get_euler_xyz(self.hand_orientations[self.another_hand_indices, :])[2].unsqueeze(-1)
 
-        self.obs_buf[:, hand_another_pose_start + 6: hand_another_pose_start + 9] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 3)).to(self.device).unsqueeze(-1), self.block_right_handle_pos - self.right_hand_pos, self.block_right_handle_2_pos - self.right_hand_pos) * 5
+        self.obs_buf[:, hand_another_pose_start + 6: hand_another_pose_start + 9] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 2)).to(self.device).unsqueeze(-1), self.block_left_handle_pos - self.left_hand_pos, self.block_left_handle_2_pos - self.left_hand_pos) * 5
         action_another_obs_start = hand_another_pose_start + 9
         self.obs_buf[:, action_another_obs_start:action_another_obs_start + 26] = self.actions[:, 26:]
 
