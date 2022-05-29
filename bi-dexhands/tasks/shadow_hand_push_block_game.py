@@ -988,7 +988,7 @@ def compute_hand_reward(
     # successes = (left_hand_rew > -0.1) & (right_hand_rew > -0.1)
     successes = game_rew > 1
     # reward = torch.exp(-0.1*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.1*(left_hand_dist_rew * dist_reward_scale))
-    reward = left_hand_rew + right_hand_rew + game_rew
+    reward = left_hand_rew  # + right_hand_rew + game_rew
 
     resets = torch.where(successes, torch.ones_like(reset_buf), reset_buf)
 
