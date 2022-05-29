@@ -145,6 +145,9 @@ class MultiVecTaskPython(MultiVecTask):
         state_buf = torch.clamp(self.task.obs_buf, -self.clip_obs, self.clip_obs)
 
         rewards = self.task.rew_buf.unsqueeze(-1).to(self.rl_device)
+        separate_rewards = None
+        if hasattr(self.task, 'sep_rew_buf'):
+            separate_rewards = self.task.sep_rew_buf.to(self.rl_device)
         dones = self.task.reset_buf.to(self.rl_device)
 
         sub_agent_obs = []
@@ -159,7 +162,9 @@ class MultiVecTaskPython(MultiVecTask):
                 sub_agent_obs.append(hand_obs[1])
 
             agent_state.append(state_buf)
-            sub_agent_reward.append(rewards)
+            if separate_rewards is not None:
+                sub_agent_reward.append(separate_rewards[..., i: i + 1])
+            # sub_agent_reward.append(rewards)
             sub_agent_done.append(dones)
             sub_agent_info.append(torch.Tensor(0))
 
