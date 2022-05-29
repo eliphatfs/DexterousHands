@@ -4,9 +4,6 @@
 # and any modifications thereto.  Any use, reproduction, disclosure or
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
-
-from unittest import TextTestRunner
-from matplotlib.pyplot import axis
 import numpy as np
 import os
 import random
@@ -30,6 +27,7 @@ class ShadowHandPushBlockGame(BaseTask):
         self.randomize = self.cfg["task"]["randomize"]
         self.randomization_params = self.cfg["task"]["randomization_params"]
         self.aggregate_mode = self.cfg["env"]["aggregateMode"]
+        self.reward_mode = self.cfg["env"]["rewardMode"]
 
         self.dist_reward_scale = self.cfg["env"]["distRewardScale"]
         self.rot_reward_scale = self.cfg["env"]["rotRewardScale"]
@@ -561,7 +559,7 @@ class ShadowHandPushBlockGame(BaseTask):
             self.left_hand_ff_pos, self.left_hand_mf_pos, self.left_hand_rf_pos, self.left_hand_lf_pos, self.left_hand_th_pos, 
             self.dist_reward_scale, self.rot_reward_scale, self.rot_eps, self.actions, self.action_penalty_scale,
             self.success_tolerance, self.reach_goal_bonus, self.fall_dist, self.fall_penalty,
-            self.max_consecutive_successes, self.av_factor, (self.object_type == "pen"), self.env_type_ids
+            self.max_consecutive_successes, self.av_factor, (self.object_type == "pen"), self.env_type_ids, self.reward_mode
         )
 
         self.extras['successes'] = self.successes
@@ -713,8 +711,8 @@ class ShadowHandPushBlockGame(BaseTask):
         self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.block_left_handle_pos
         self.obs_buf[:, obj_obs_start + 19:obj_obs_start + 22] = self.block_right_handle_2_pos
         self.obs_buf[:, obj_obs_start + 22:obj_obs_start + 25] = self.block_left_handle_2_pos
-        self.obs_buf[:, obj_obs_start + 25: obj_obs_start + 28] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 2)).to(self.device).unsqueeze(-1), self.block_left_handle_pos - self.left_hand_pos, self.block_left_handle_2_pos - self.left_hand_pos) * 5
-        self.obs_buf[:, obj_obs_start + 28: obj_obs_start + 31] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 3)).to(self.device).unsqueeze(-1), self.block_right_handle_pos - self.right_hand_pos, self.block_right_handle_2_pos - self.right_hand_pos) * 5
+        self.obs_buf[:, obj_obs_start + 25: obj_obs_start + 28] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 2)).to(self.device).unsqueeze(-1), self.block_left_handle_pos, self.block_left_handle_2_pos)
+        self.obs_buf[:, obj_obs_start + 28: obj_obs_start + 31] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 3)).to(self.device).unsqueeze(-1), self.block_right_handle_pos, self.block_right_handle_2_pos)
         # self.obs_buf[:, obj_obs_start + 25] = self.obs_buf.new_tensor(self.env_type_ids == 1)
         # self.obs_buf[:, obj_obs_start + 26] = self.obs_buf.new_tensor(self.env_type_ids == 2)
         # self.obs_buf[:, obj_obs_start + 27] = self.obs_buf.new_tensor(self.env_type_ids == 3)
@@ -931,6 +929,8 @@ class ShadowHandPushBlockGame(BaseTask):
         self.gym.add_lines(self.viewer, env, 1, [p0[0], p0[1], p0[2], posz[0], posz[1], posz[2]], [0.1, 0.1, 0.85])
 
 
+game_results = []
+
 #####################################################################
 ###=========================jit functions=========================###
 #####################################################################
@@ -942,7 +942,7 @@ def compute_hand_reward(
     dist_reward_scale: float, rot_reward_scale: float, rot_eps: float,
     actions, action_penalty_scale: float,
     success_tolerance: float, reach_goal_bonus: float, fall_dist: float,
-    fall_penalty: float, max_consecutive_successes: int, av_factor: float, ignore_z_rot: bool, env_type_ids
+    fall_penalty: float, max_consecutive_successes: int, av_factor: float, ignore_z_rot: bool, env_type_ids, reward_mode
 ):
     # Distance from the hand to the object
     # left_goal_dist = torch.norm(target_pos - block_left_handle_pos, p=2, dim=-1)
@@ -992,7 +992,7 @@ def compute_hand_reward(
     cb_p = ((left_hand_dist_2 < 0.11) & (right_hand_dist_1 < 0.11)).float() * 0.0
     game_rew_left = bb_p + cc_p + bc_p + cb_p
     # successes = (left_hand_rew > -0.1) & (right_hand_rew > -0.1)
-    successes = game_rew_left > 1
+    successes = (game_rew_left + game_rew_right) > 1
     # reward = torch.exp(-0.1*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.1*(left_hand_dist_rew * dist_reward_scale))
     reward = left_hand_rew + right_hand_rew + game_rew_left + game_rew_right
 
@@ -1008,7 +1008,12 @@ def compute_hand_reward(
 
     cons_successes = torch.where(num_resets > 0, av_factor*finished_cons_successes/num_resets + (1.0 - av_factor)*consecutive_successes, consecutive_successes)
 
-    return reward, resets, goal_resets, progress_buf, successes, cons_successes, torch.stack([right_hand_rew + game_rew_right, left_hand_rew + game_rew_left], -1)
+    if reward_mode == 0:
+        return reward, resets, goal_resets, progress_buf, successes, cons_successes, torch.stack([right_hand_rew + game_rew_right, left_hand_rew + game_rew_left], -1)
+    elif reward_mode == 1:
+        return reward, resets, goal_resets, progress_buf, successes, cons_successes, torch.stack([right_hand_rew + (game_rew_right + game_rew_left) / 2, left_hand_rew + (game_rew_right + game_rew_left) / 2], -1)
+    elif reward_mode == 2:
+        return reward, resets, goal_resets, progress_buf, successes, cons_successes, torch.stack([(right_hand_rew + game_rew_right + left_hand_rew + game_rew_left) / 2] * 2, -1)
 
 
 @torch.jit.script
