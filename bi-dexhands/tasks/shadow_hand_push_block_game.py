@@ -101,9 +101,9 @@ class ShadowHandPushBlockGame(BaseTask):
             "openai": 42,
             "full_no_vel": 77,
             "full": 157,
-            "full_state": 422 - 11 + 6 + 6 + 4 + 6
+            "full_state": 422 - 11 + 6 + 6 + 6
         }
-        self.num_hand_obs = 72 + 95 + 26 + 6 + 3
+        self.num_hand_obs = 72 + 95 + 26 + 6
         self.up_axis = 'z'
 
         self.fingertips = ["robot0:ffdistal", "robot0:mfdistal", "robot0:rfdistal", "robot0:lfdistal", "robot0:thdistal"]
@@ -680,8 +680,8 @@ class ShadowHandPushBlockGame(BaseTask):
         self.obs_buf[:, hand_pose_start+4:hand_pose_start+5] = get_euler_xyz(self.hand_orientations[self.hand_indices, :])[1].unsqueeze(-1)
         self.obs_buf[:, hand_pose_start+5:hand_pose_start+6] = get_euler_xyz(self.hand_orientations[self.hand_indices, :])[2].unsqueeze(-1)
 
-        self.obs_buf[:, hand_pose_start + 6: hand_pose_start + 9] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 3)).to(self.device).unsqueeze(-1), self.block_right_handle_pos - self.right_hand_pos, self.block_right_handle_2_pos - self.right_hand_pos) * 5
-        action_obs_start = hand_pose_start + 9
+        # self.obs_buf[:, hand_pose_start + 6: hand_pose_start + 9] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 3)).to(self.device).unsqueeze(-1), self.block_right_handle_pos - self.right_hand_pos, self.block_right_handle_2_pos - self.right_hand_pos) * 5
+        action_obs_start = hand_pose_start + 6
         self.obs_buf[:, action_obs_start:action_obs_start + 26] = self.actions[:, :26]
 
         # another_hand
@@ -702,8 +702,7 @@ class ShadowHandPushBlockGame(BaseTask):
         self.obs_buf[:, hand_another_pose_start+4:hand_another_pose_start+5] = get_euler_xyz(self.hand_orientations[self.another_hand_indices, :])[1].unsqueeze(-1)
         self.obs_buf[:, hand_another_pose_start+5:hand_another_pose_start+6] = get_euler_xyz(self.hand_orientations[self.another_hand_indices, :])[2].unsqueeze(-1)
 
-        self.obs_buf[:, hand_another_pose_start + 6: hand_another_pose_start + 9] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 2)).to(self.device).unsqueeze(-1), self.block_left_handle_pos - self.left_hand_pos, self.block_left_handle_2_pos - self.left_hand_pos) * 5
-        action_another_obs_start = hand_another_pose_start + 9
+        action_another_obs_start = hand_another_pose_start + 6
         self.obs_buf[:, action_another_obs_start:action_another_obs_start + 26] = self.actions[:, 26:]
 
         obj_obs_start = action_another_obs_start + 26  # 144
@@ -714,11 +713,12 @@ class ShadowHandPushBlockGame(BaseTask):
         self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.block_left_handle_pos
         self.obs_buf[:, obj_obs_start + 19:obj_obs_start + 22] = self.block_right_handle_2_pos
         self.obs_buf[:, obj_obs_start + 22:obj_obs_start + 25] = self.block_left_handle_2_pos
-
-        self.obs_buf[:, obj_obs_start + 25] = self.obs_buf.new_tensor(self.env_type_ids == 1)
-        self.obs_buf[:, obj_obs_start + 26] = self.obs_buf.new_tensor(self.env_type_ids == 2)
-        self.obs_buf[:, obj_obs_start + 27] = self.obs_buf.new_tensor(self.env_type_ids == 3)
-        self.obs_buf[:, obj_obs_start + 28] = self.obs_buf.new_tensor(self.env_type_ids == 4)
+        self.obs_buf[:, obj_obs_start + 25: obj_obs_start + 28] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 2)).to(self.device).unsqueeze(-1), self.block_left_handle_pos - self.left_hand_pos, self.block_left_handle_2_pos - self.left_hand_pos) * 5
+        self.obs_buf[:, obj_obs_start + 28: obj_obs_start + 31] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 3)).to(self.device).unsqueeze(-1), self.block_right_handle_pos - self.right_hand_pos, self.block_right_handle_2_pos - self.right_hand_pos) * 5
+        # self.obs_buf[:, obj_obs_start + 25] = self.obs_buf.new_tensor(self.env_type_ids == 1)
+        # self.obs_buf[:, obj_obs_start + 26] = self.obs_buf.new_tensor(self.env_type_ids == 2)
+        # self.obs_buf[:, obj_obs_start + 27] = self.obs_buf.new_tensor(self.env_type_ids == 3)
+        # self.obs_buf[:, obj_obs_start + 28] = self.obs_buf.new_tensor(self.env_type_ids == 4)
         # self.obs_buf[:] = 0
         # self.obs_buf[:, 0: 3] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 2)).to(self.device).unsqueeze(-1), self.block_left_handle_pos - self.left_hand_pos, self.block_left_handle_2_pos - self.left_hand_pos)
         # self.obs_buf[:, 3: 6] = torch.where(torch.tensor((self.env_type_ids == 1) | (self.env_type_ids == 3)).to(self.device).unsqueeze(-1), self.block_right_handle_pos - self.right_hand_pos, self.block_right_handle_2_pos - self.right_hand_pos)
@@ -1003,7 +1003,7 @@ def compute_hand_reward(
 
     cons_successes = torch.where(num_resets > 0, av_factor*finished_cons_successes/num_resets + (1.0 - av_factor)*consecutive_successes, consecutive_successes)
 
-    return reward, resets, goal_resets, progress_buf, successes, cons_successes, torch.stack([left_hand_rew + game_rew, right_hand_rew + game_rew], -1)
+    return reward, resets, goal_resets, progress_buf, successes, cons_successes, torch.stack([left_hand_rew, right_hand_rew], -1)
 
 
 @torch.jit.script
