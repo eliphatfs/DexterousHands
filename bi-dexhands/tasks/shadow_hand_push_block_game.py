@@ -827,7 +827,7 @@ class ShadowHandPushBlockGame(BaseTask):
                                               gymtorch.unwrap_tensor(all_hand_indices), len(all_hand_indices))
                                               
         self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0] = torch.rand_like(self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0]) - 0.5
-        self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 1] = torch.rand_like(self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0]) - 0.5
+        # self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 1] = torch.rand_like(self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0]) - 0.5
         self.gym.set_actor_root_state_tensor_indexed(self.sim,
                                                      gymtorch.unwrap_tensor(self.root_state_tensor),
                                                      gymtorch.unwrap_tensor(all_indices), len(all_indices))
@@ -954,8 +954,8 @@ def compute_hand_reward(
     left_hand_dist_1 = torch.norm(block_left_handle_pos - left_hand_pos, p=2, dim=-1)  # , right_hand_pos.new_tensor((env_type_ids == 1) | (env_type_ids == 3)))
     left_hand_dist_2 = torch.norm(block_left_handle_2_pos - left_hand_pos, p=2, dim=-1)  # , right_hand_pos.new_tensor((env_type_ids == 2) | (env_type_ids == 4)))
     left_hand_rew = -torch.min(left_hand_dist_1, left_hand_dist_2)
-    # left_hand_rew = -(left_hand_dist_1 * right_hand_pos.new_tensor((env_type_ids == 1) | (env_type_ids == 2)) + left_hand_dist_2 * right_hand_pos.new_tensor((env_type_ids == 3) | (env_type_ids == 4)))
-    right_hand_rew = -(right_hand_dist_1 * right_hand_pos.new_tensor((env_type_ids == 1) | (env_type_ids == 3)) + right_hand_dist_2 * right_hand_pos.new_tensor((env_type_ids == 2) | (env_type_ids == 4)))
+    left_hand_rew = -(left_hand_dist_1 * right_hand_pos.new_tensor(env_type_ids == 2) + left_hand_dist_2 * right_hand_pos.new_tensor(env_type_ids == 3))
+    right_hand_rew = -(right_hand_dist_1 * right_hand_pos.new_tensor(env_type_ids == 1) + right_hand_dist_2 * right_hand_pos.new_tensor(env_type_ids == 4))
 
     # right_hand_finger_dist = (torch.norm(block_right_handle_pos - right_hand_ff_pos, p=2, dim=-1) + torch.norm(block_right_handle_pos - right_hand_mf_pos, p=2, dim=-1)
     #                         + torch.norm(block_right_handle_pos - right_hand_rf_pos, p=2, dim=-1) + torch.norm(block_right_handle_pos - right_hand_lf_pos, p=2, dim=-1) 
@@ -989,7 +989,7 @@ def compute_hand_reward(
     # successes = (left_hand_rew > -0.1) & (right_hand_rew > -0.1)
     successes = game_rew > 1
     # reward = torch.exp(-0.1*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.1*(left_hand_dist_rew * dist_reward_scale))
-    reward = left_hand_rew  # + right_hand_rew + game_rew
+    reward = left_hand_rew + right_hand_rew + game_rew
 
     resets = torch.where(successes, torch.ones_like(reset_buf), reset_buf)
 
