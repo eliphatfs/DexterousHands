@@ -826,7 +826,7 @@ class ShadowHandPushBlockGame(BaseTask):
                                               gymtorch.unwrap_tensor(self.dof_state),
                                               gymtorch.unwrap_tensor(all_hand_indices), len(all_hand_indices))
                                               
-        self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0] = (torch.rand_like(self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0]) - 0.5) * 5 ** (-self.pstep_count * 512 / 10 ** 6)
+        self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0] = (torch.rand_like(self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0]) - 0.5)
         # self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 1] = torch.rand_like(self.root_state_tensor[self.all_block_indices[env_ids].reshape(-1), 0]) - 0.5
         self.gym.set_actor_root_state_tensor_indexed(self.sim,
                                                      gymtorch.unwrap_tensor(self.root_state_tensor),
@@ -1027,6 +1027,8 @@ def compute_hand_reward(
         return reward, resets, goal_resets, progress_buf, successes, cons_successes, torch.stack([right_hand_rew + (game_rew_right + game_rew_left) / 2, left_hand_rew + (game_rew_right + game_rew_left) / 2], -1)
     elif reward_mode == 2:
         return reward, resets, goal_resets, progress_buf, successes, cons_successes, torch.stack([(right_hand_rew + game_rew_right + left_hand_rew + game_rew_left) / 2] * 2, -1)
+    elif reward_mode == 3:
+        return reward, resets, goal_resets, progress_buf, successes, cons_successes, torch.stack([right_hand_rew, left_hand_rew], -1)
 
 
 @torch.jit.script
