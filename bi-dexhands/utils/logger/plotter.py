@@ -114,6 +114,12 @@ def plot_ax(
         y = smooth(y, radius=smooth_radius)
         color = COLORS[index % len(COLORS)]
         ax.plot(x, y, color=color)
+
+    for index, csv_file in enumerate(file_lists):
+        csv_dict = csv2numpy(csv_file)
+        x, y = csv_dict[xkey], csv_dict[ykey]
+        y = smooth(y, radius=smooth_radius)
+        color = COLORS[index % len(COLORS)]
         if shaded_std and ykey + ':shaded' in csv_dict:
             y_shaded = smooth(csv_dict[ykey + ':shaded'], radius=smooth_radius)
             ax.fill_between(x, y - y_shaded, y + y_shaded, color=color, alpha=.2)
